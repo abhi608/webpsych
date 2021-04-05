@@ -1,0 +1,31 @@
+{
+  "name": "webpsych",
+  "version": "1.0.0",
+  "description": "Psychology experiment toolkit",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abhi608/webpsych.git"
+  },
+  "keywords": [
+    "express",
+    "mongodb"
+  ],
+  "author": "Abhishek Verma (abhi608)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/abhi608/webpsych/issues"
+  },
+  "homepage": "https://github.com/abhi608/webpsych#readme",
+  "dependencies": {
+    "express": "4.17.1",
+    "mathjs": "9.1.0",
+    "mongodb": "3.6.3",
+    "prompt-sync": "4.2.0",
+    "prompt-sync-history": "1.0.1",
+    "uuid": "8.3.1"
+  }
+}
