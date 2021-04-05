@@ -37,8 +37,30 @@ function setup() {
 
 function setupExp() {
     createCanvas(windowWidth, windowHeight);
-    // Instructions Loop
+
+    // Instantiate experiment object and keep on adding new routines to it
+    var url = 'http://localhost:5000/saveData';
+    version = 1;
+    exp = new Experiment(url, 'centeringf' + '_' + version);
+
+
+
+    // Experiment info starts here 
+    var exp_info_box = new ExpInfoBox({
+        name: 'expinfo',
+        data: ['Name', 'Age'],
+        additional_info: {
+            'participant': Math.random().toString(36).substring(7)
+        }
+    });
+    exp.addRoutine(exp_info_box);
+    // Experiment info ends here
+
+
+
+    // Instructions Loop starts here
     var instructions_loop = new Loop(instructions, 1);
+    // instr routine starts here
     var instr = new Routine();
     instr.addComponent(new TextStimulus({
         name: 'instruction',
@@ -50,14 +72,18 @@ function setupExp() {
     instr.addComponent(new KeyboardResponse({
         name: 'instr_resp'
     }));
+    instructions_loop.addRoutine(instr);
+    //instr routine ends here
+    exp.addRoutine(instructions_loop);
+    // Instructions loop ends here
 
 
-    // Training Session Loop
+
+    // Training Session Loop starts here
     var trainingLoop = new Loop(training, 2);
 
-    var interStimuliBreakTraining = new Routine();
-
-
+    // interStimuliBreakTrainingRoutine starts here
+    var interStimuliBreakTrainingRoutine = new Routine();
     var breakTextTraining = new TextStimulus({
         name: 'break_text',
         text: 'Another set of experiments are about to begin.',
@@ -77,51 +103,14 @@ function setupExp() {
         fill_color: [255, 0, 0],
         timestop: 2000
     });
-
     timeSettingsTraining.at_the_start.push(function () {
         var timestop = random(1000, 2000);
         progressBarTraining.timestop = timestop;
         breakTextTraining.timestop = timestop;
     });
-
-    interStimuliBreakTraining.addComponent(timeSettingsTraining);
-    interStimuliBreakTraining.addComponent(breakTextTraining);
-    interStimuliBreakTraining.addComponent(progressBarTraining);
-
-    var stimuliTrainingRoutine = new Routine();
-    var stimuliResponseTrainingRoutine = new Routine();
-
-    var feedbackTraining = new Routine();
-
-    var fixationTraining = new TextStimulus({
-        name: 'fixation',
-        text: '+',
-        timestop: 1000
-    });
-
-    var trainingTextComponent = new TextStimulus({
-        name: 'stimulitrain',
-        text: function () {
-            return trainingLoop.currentTrial['stimuli'];
-        },
-        timestart: 1000,
-        timestop: 2000
-    });
-
-    var responseHelpTrainingComponent = new TextStimulus({
-        name: 'instruction',
-        text: 'Press the alphabet/number key on keyboard corresponding to the alphabet/number that you saw'
-    });
-
-    var responseKeyboardTrainingComponent = new KeyboardResponse({
-        name: 'response_sensible',
-        keys: [49, 51]
-    });
-
     var tsb = new CodeComponent({
         name: 'training_session_breaker'
     });
-
     tsb.p_counter = 0;
     tsb.n_counter = 0;
     tsb.at_the_start.push(function () {
@@ -132,39 +121,102 @@ function setupExp() {
             tsb.experiment.nextRoutine();
         }
     });
+    interStimuliBreakTrainingRoutine.addComponent(timeSettingsTraining);
+    interStimuliBreakTrainingRoutine.addComponent(breakTextTraining);
+    interStimuliBreakTrainingRoutine.addComponent(progressBarTraining);
+    interStimuliBreakTrainingRoutine.addComponent(tsb);
+    trainingLoop.addRoutine(interStimuliBreakTrainingRoutine);
+    // interStimuliBreakTrainingRoutine ends here
 
+    // fixationInstrTrainingRoutine starts here
+    var fixationInstrTrainingRoutine = new Routine();
+    var fixationInstrTraining = new TextStimulus({
+        name: 'fixation_instruction',
+        text: 'In the next step, fix your vision on the + symbol and press ENTER.\nPress ENTER when ready.'
+    });
+    var fixationInstrResponseTraining = new KeyboardResponse({
+        name: 'fixation_instruction_response_training'
+    });
+    fixationInstrTrainingRoutine.addComponent(fixationInstrTraining);
+    fixationInstrTrainingRoutine.addComponent(fixationInstrResponseTraining);
+    trainingLoop.addRoutine(fixationInstrTrainingRoutine);
+    // fixationInstrTrainingRoutine ends here
+
+    // stimuliTrainingRoutine starts here
+    var stimuliTrainingRoutine = new Routine();
+    var fixationTraining = new TextStimulus({
+        name: 'fixation',
+        text: '+'
+        // timestop: 1000
+    });
+    var fixationResponseTraining = new KeyboardResponse({
+        name: 'fixation_response_training'
+    });
+    stimuliTrainingRoutine.addComponent(fixationTraining);
+    stimuliTrainingRoutine.addComponent(fixationResponseTraining);
+    trainingLoop.addRoutine(stimuliTrainingRoutine);
+    // stimuliTrainingRoutine ends here
+
+    // stimuliTextTrainingRoutine starts here
+    var stimuliTextTrainingRoutine = new Routine();
+    var trainingTextComponent = new TextStimulus({
+        name: 'stimulitrain',
+        text: function () {
+            return trainingLoop.currentTrial['stimuli'];
+        },
+        // timestart: 1000,
+        timestop: 2000
+    });
+    stimuliTextTrainingRoutine.addComponent(trainingTextComponent);
+    trainingLoop.addRoutine(stimuliTextTrainingRoutine);
+    // stimuliTextTrainingRoutine ends here
+
+    // stimuliResponseTrainingRoutine starts here
+    var stimuliResponseTrainingRoutine = new Routine();
+    var responseHelpTrainingComponent = new TextStimulus({
+        name: 'instruction',
+        text: 'Press the alphabet/number key on keyboard corresponding to the alphabet/number that you saw'
+    });
+    var responseKeyboardTrainingComponent = new KeyboardResponse({
+        name: 'response_sensible',
+        keys: [49, 51]
+    });
+    stimuliResponseTrainingRoutine.addComponent(responseHelpTrainingComponent);
+    stimuliResponseTrainingRoutine.addComponent(responseKeyboardTrainingComponent);
+    trainingLoop.addRoutine(stimuliResponseTrainingRoutine);
+    // stimuliResponseTrainingRoutine ends here
+
+    // feedbackTrainingRoutine starts here
+    var feedbackTrainingRoutine = new Routine();
     var feedbackText = new TextStimulus({
         name: 'feedback_text',
         text: function () {
             if (responseKeyboardTrainingComponent.response == trainingLoop.currentTrial['corr']) {
                 tsb.n_counter = tsb.p_counter + 1;
                 console.log(tsb.n_counter);
-                return 'Your answer was correct.';
+                return 'Your answer was correct. You can go to the next part by pressing ENTER.';
             } else {
                 tsb.n_counter = 0;
-                return "Your answer was incorrect.";
+                return "Your answer was incorrect. You can go to the next part by pressing ENTER.";
             }
         }
     });
-
-
     var feedbackResponseTraining = new KeyboardResponse({
         name: 'feedback_next_training'
     });
-
-    interStimuliBreakTraining.addComponent(tsb);
-    stimuliTrainingRoutine.addComponent(fixationTraining);
-    stimuliTrainingRoutine.addComponent(trainingTextComponent);
-
-    stimuliResponseTrainingRoutine.addComponent(responseHelpTrainingComponent);
-    stimuliResponseTrainingRoutine.addComponent(responseKeyboardTrainingComponent);
-
-    feedbackTraining.addComponent(feedbackText);
-    feedbackTraining.addComponent(feedbackResponseTraining);
+    feedbackTrainingRoutine.addComponent(feedbackText);
+    feedbackTrainingRoutine.addComponent(feedbackResponseTraining);
+    trainingLoop.addRoutine(feedbackTrainingRoutine);
+    // feedbackTrainingRoutine ends here
+    // exp.addRoutine(trainingLoop);
+    // Training Session Loop ends here
 
 
-    // Inter-session instruction
+
+    // intersessionInstructionsLoop starts here
     var intersessionInstructionsLoop = new Loop(intersession_instructions, 1);
+
+    // intersessionInstructionsRoutine starts here
     var intersessionInstructionsRoutine = new Routine();
     intersessionInstructionsRoutine.addComponent(new TextStimulus({
         name: 'intersession_instruction',
@@ -176,16 +228,19 @@ function setupExp() {
     intersessionInstructionsRoutine.addComponent(new KeyboardResponse({
         name: 'iinstr_resp'
     }));
+    intersessionInstructionsLoop.addRoutine(intersessionInstructionsRoutine);
+    // intersessionInstructionsRoutine ends here
+    exp.addRoutine(intersessionInstructionsLoop);
+    // intersessionInstructionsLoop ends here
 
 
 
 
+    // Main session (trialsLoop) starts here
+    var trialsLoop = new Loop(conditions, 1);
 
-    // Main session
-    var trials = new Loop(conditions, 1);
-    var interStimuliBreak = new Routine();
-
-
+    // interStimuliBreakRoutine starts here
+    var interStimuliBreakRoutine = new Routine();
     var breakText = new TextStimulus({
         name: 'break_text',
         text: 'Another set of experiments are about to begin.',
@@ -205,137 +260,132 @@ function setupExp() {
         fill_color: [255, 0, 0],
         timestop: 2000
     });
-
     timeSettings.at_the_start.push(function () {
         var timestop = random(1000, 2000);
         progressBarTraining.timestop = timestop;
         breakTextTraining.timestop = timestop;
     });
-
-    interStimuliBreak.addComponent(timeSettings);
-    interStimuliBreak.addComponent(breakText);
-    interStimuliBreak.addComponent(progressBar);
-
-    var stimuliRoutine = new Routine();
-    var stimuliResponseRoutine = new Routine();
-
-    var feedback = new Routine();
-
-    var fixation = new TextStimulus({
-        name: 'fixation',
-        text: '+',
-        timestop: 1000
+    var tsbMain = new CodeComponent({
+        name: 'main_session_breaker'
     });
+    tsbMain.p_counter = 0;
+    tsbMain.n_counter = 0;
+    tsbMain.at_the_start.push(function () {
+        tsbMain.p_counter = tsbMain.n_counter;
+        console.log(tsbMain.n_counter);
+        console.log(tsbMain.p_counter);
+        if (tsbMain.n_counter == 6) {
+            tsbMain.experiment.nextRoutine();
+        }
+    });
+    interStimuliBreakRoutine.addComponent(timeSettings);
+    interStimuliBreakRoutine.addComponent(breakText);
+    interStimuliBreakRoutine.addComponent(progressBar);
+    interStimuliBreakRoutine.addComponent(tsbMain);
+    trialsLoop.addRoutine(interStimuliBreakRoutine);
+    // interStimuliBreakRoutine ends here
 
-    var textComponent = new TextStimulus({
+    // fixationInstrMainRoutine starts here
+    var fixationInstrMainRoutine = new Routine();
+    var fixationInstrMain = new TextStimulus({
+        name: 'fixation_instruction',
+        text: 'In the next step, fix your vision on the + symbol and press ENTER.\nPress ENTER when ready.'
+    });
+    var fixationInstrResponseMain = new KeyboardResponse({
+        name: 'fixation_instruction_response_training'
+    });
+    fixationInstrMainRoutine.addComponent(fixationInstrMain);
+    fixationInstrMainRoutine.addComponent(fixationInstrResponseMain);
+    trialsLoop.addRoutine(fixationInstrTrainingRoutine);
+    // fixationInstrMainRoutine ends here
+
+    // stimuliMainRoutine starts here
+    var stimuliMainRoutine = new Routine();
+    var fixationMain = new TextStimulus({
+        name: 'fixation',
+        text: '+'
+        // timestop: 1000
+    });
+    var fixationResponseMain = new KeyboardResponse({
+        name: 'fixation_response_main'
+    });
+    stimuliMainRoutine.addComponent(fixationMain);
+    stimuliMainRoutine.addComponent(fixationResponseMain);
+    trialsLoop.addRoutine(stimuliMainRoutine);
+    // stimuliMainRoutine ends here
+
+    // stimuliTextMainRoutine starts here
+    var stimuliTextMainRoutine = new Routine();
+    var mainTextComponent = new TextStimulus({
         name: 'stimuli',
         text: function () {
-            return trials.currentTrial['stimuli'];
+            return trialsLoop.currentTrial['stimuli'];
         },
-        timestart: 1000,
+        // timestart: 1000,
         timestop: 2000
     });
+    stimuliTextMainRoutine.addComponent(mainTextComponent);
+    trialsLoop.addRoutine(stimuliTextMainRoutine);
+    // stimuliTextMainRoutine ends here
 
+    // stimuliResponseRoutine starts here
+    var stimuliResponseRoutine = new Routine();
     var responseHelpComponent = new TextStimulus({
         name: 'instruction',
         text: 'Press the alphabet/number key on keyboard corresponding to the alphabet/number that you saw'
     });
-
     var responseKeyboardComponent = new KeyboardResponse({
         name: 'response_sensible',
         keys: [49, 51]
     });
+    stimuliResponseRoutine.addComponent(responseHelpComponent);
+    stimuliResponseRoutine.addComponent(responseKeyboardComponent);
+    trialsLoop.addRoutine(stimuliResponseRoutine);
+    // stimuliResponseRoutine ends here
 
-    var tsb = new CodeComponent({
-        name: 'session_breaker'
-    });
-
-    tsb.p_counter = 0;
-    tsb.n_counter = 0;
-    tsb.at_the_start.push(function () {
-        tsb.p_counter = tsb.n_counter;
-        console.log(tsb.n_counter);
-        console.log(tsb.p_counter);
-        if (tsb.n_counter == 6) {
-            tsb.experiment.nextRoutine();
-        }
-    });
-
+    // feedbackMainRoutine starts here
+    var feedbackMainRoutine = new Routine();
     var feedbackText = new TextStimulus({
         name: 'feedback_text',
         text: function () {
-            if (responseKeyboardComponent.response == trials.currentTrial['corr']) {
-                tsb.n_counter = tsb.p_counter + 1;
-                console.log(tsb.n_counter);
+            if (responseKeyboardComponent.response == trialsLoop.currentTrial['corr']) {
+                tsbMain.n_counter = tsbMain.p_counter + 1;
+                console.log(tsbMain.n_counter);
                 return 'Your answer was correct.';
             } else {
-                tsb.n_counter = 0;
+                tsbMain.n_counter = 0;
                 return "Your answer was incorrect.";
             }
         }
     });
-
-
     var feedbackResponse = new KeyboardResponse({
         name: 'feedback_next'
     });
+    feedbackMainRoutine.addComponent(feedbackText);
+    feedbackMainRoutine.addComponent(feedbackResponse);
+    // trialsLoop.addRoutine(feedbackMainRoutine);  // no beedback in main loop
+    // feedbackMainRoutine ends here
 
-    interStimuliBreak.addComponent(tsb);
-    stimuliRoutine.addComponent(fixation);
-    stimuliRoutine.addComponent(textComponent);
-
-    stimuliResponseRoutine.addComponent(responseHelpComponent);
-    stimuliResponseRoutine.addComponent(responseKeyboardComponent);
-
-    feedback.addComponent(feedbackText);
-    feedback.addComponent(feedbackResponse);
-
-    instructions_loop.addRoutine(instr);
-
-    trainingLoop.addRoutine(interStimuliBreakTraining);
-    trainingLoop.addRoutine(stimuliTrainingRoutine);
-    trainingLoop.addRoutine(stimuliResponseTrainingRoutine);
-    trainingLoop.addRoutine(feedbackTraining);
-
-    intersessionInstructionsLoop.addRoutine(intersessionInstructionsRoutine);
-
-    trials.addRoutine(interStimuliBreak);
-    trials.addRoutine(stimuliRoutine);
-    trials.addRoutine(stimuliResponseRoutine);
+    exp.addRoutine(trialsLoop);
+    // trialsLoop ends here
 
 
-    var thanks = new Routine();
-    thanks.addComponent(new TextStimulus({
+
+    // thanksRoutine starts here - this routine can be understood as single routine in a single loop
+    var thanksRoutine = new Routine();
+    thanksRoutine.addComponent(new TextStimulus({
         name: 'thankyou',
         text: 'Thank you for participating in the experiment! Pelli Lab, NYU',
         timestop: 2000
     }));
+    exp.addRoutine(thanksRoutine);
+    // thanksRoutine ends here
 
 
-    var url = 'http://localhost:5000/saveData';
-
-    version = 1;
-    exp = new Experiment(url, 'centeringf' + '_' + version);
 
 
-    var exp_info_box = new ExpInfoBox({
-        name: 'expinfo',
-        data: ['Name', 'Age'],
-        additional_info: {
-            'participant': Math.random().toString(36).substring(7)
-        }
-    });
-
-    exp.addRoutine(exp_info_box);
-
-    exp.addRoutine(instructions_loop);
-    exp.addRoutine(trainingLoop);
-    exp.addRoutine(intersessionInstructionsLoop);
-    exp.addRoutine(trials);
-    exp.addRoutine(thanks);
-
+    // start the experiment now
     exp.start();
-
     loaded = true;
 }
 
