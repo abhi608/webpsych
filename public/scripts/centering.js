@@ -6,6 +6,10 @@ var intersession_instructions_data;
 var conditions;
 var training;
 var training_data;
+var soundPositiveFeedback;
+var soundNegativeFeedback;
+var pelliFont;
+var sloanFont;
 var instructions;
 var intersession_instructions;
 var instructions_loop;
@@ -15,20 +19,30 @@ var rv;
 var loaded = false;
 
 function setup() {
-    trials_data = loadTable('trials.csv', 'csv', 'header',
+    trials_data = loadTable('../data/trials.csv', 'csv', 'header',
         function () {
             conditions = LoadP5TableData(trials_data);
-
-            instructions_data = loadTable('instructions.csv', 'csv', 'header',
+            instructions_data = loadTable('../data/instructions.csv', 'csv', 'header',
                 function () {
                     instructions = LoadP5TableData(instructions_data);
-                    intersession_instructions_data = loadTable('intersession_instructions.csv', 'csv', 'header',
+                    intersession_instructions_data = loadTable('../data/intersession_instructions.csv', 'csv', 'header',
                         function () {
                             intersession_instructions = LoadP5TableData(intersession_instructions_data);
-                            training_data = loadTable('training.csv', 'csv', 'header', function () {
+                            training_data = loadTable('../data/training.csv', 'csv', 'header', function () {
                                 training = LoadP5TableData(training_data);
                                 console.log(training);
-                                setupExp();
+                                // load fonts and sound here
+                                soundPositiveFeedback = loadSound('../sound/positiveFeedback.mp3', function () {
+                                    soundNegativeFeedback = loadSound('../sound/negativeFeedback.mp3', function () {
+                                        setupExp();
+                                        // pelliFont = loadFont('../fonts/Pelli.otf', function () {
+                                        //     sloanFont = loadFont('../fonts/Sloan.otf', function () {
+                                        //         console.log("Everything loaded!");
+                                        //         setupExp();
+                                        //     });
+                                        // });
+                                    });
+                                });
                             });
                         });
                 });
@@ -188,27 +202,25 @@ function setupExp() {
 
     // feedbackTrainingRoutine starts here
     var feedbackTrainingRoutine = new Routine();
-    var feedbackText = new TextStimulus({
-        name: 'feedback_text',
-        text: function () {
+    var feedbackSound = new SoundStimulus({
+        name: 'feedback_sound',
+        sound: function () {
             if (responseKeyboardTrainingComponent.response == trainingLoop.currentTrial['corr']) {
                 tsb.n_counter = tsb.p_counter + 1;
-                console.log(tsb.n_counter);
-                return 'Your answer was correct. You can go to the next part by pressing ENTER.';
+                console.log("correct!");
+                return soundPositiveFeedback;
             } else {
                 tsb.n_counter = 0;
-                return "Your answer was incorrect. You can go to the next part by pressing ENTER.";
+                console.log("incorrect!");
+                return soundNegativeFeedback;
             }
-        }
+        },
+        timestop: 500
     });
-    var feedbackResponseTraining = new KeyboardResponse({
-        name: 'feedback_next_training'
-    });
-    feedbackTrainingRoutine.addComponent(feedbackText);
-    feedbackTrainingRoutine.addComponent(feedbackResponseTraining);
+    feedbackTrainingRoutine.addComponent(feedbackSound);
     trainingLoop.addRoutine(feedbackTrainingRoutine);
     // feedbackTrainingRoutine ends here
-    // exp.addRoutine(trainingLoop);
+    exp.addRoutine(trainingLoop);
     // Training Session Loop ends here
 
 

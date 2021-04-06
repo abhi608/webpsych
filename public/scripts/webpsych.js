@@ -303,7 +303,30 @@ class TextStimulus extends P5Component{
     
 }
 
+class SoundStimulus extends P5Component{
+    
+    constructor({name,
+        sound,
+        pos,
+        color = [0,0,0],
+        rotation,
+        timestart,
+        timestop} = {}){
+            super({name, pos, rotation, timestart, timestop});
+            this.color = setProperty(color);
+            this.sound = setProperty(sound);
+            this.update_map = {'pos' : pos, 'color' : color, 'rotation': rotation, 'sound': sound};
+        }
 
+        draw(){
+            var that = this;
+            this.drawDecorator(function(){
+                fill(color(that.color));
+                that.sound.play();
+            });
+        }
+    
+}
 
 class ImageStimulus extends P5Component{
     constructor({name,
