@@ -17,6 +17,7 @@ var intersession_instructions_loop;
 var version;
 var rv;
 var loaded = false;
+var alphabetsAndNumbers = Array.from({length: 43}, (x, i) => i + 48);
 
 function setup() {
     trials_data = loadTable('../data/trials.csv', 'csv', 'header',
@@ -34,13 +35,12 @@ function setup() {
                                 // load fonts and sound here
                                 soundPositiveFeedback = loadSound('../sound/positiveFeedback.mp3', function () {
                                     soundNegativeFeedback = loadSound('../sound/negativeFeedback.mp3', function () {
-                                        setupExp();
-                                        // pelliFont = loadFont('../fonts/Pelli.otf', function () {
-                                        //     sloanFont = loadFont('../fonts/Sloan.otf', function () {
-                                        //         console.log("Everything loaded!");
-                                        //         setupExp();
-                                        //     });
-                                        // });
+                                        pelliFont = loadFont('../fonts/Pelli.otf', function () {
+                                            sloanFont = loadFont('../fonts/Sloan.otf', function () {
+                                                console.log("Everything loaded!");
+                                                setupExp();
+                                            });
+                                        });
                                     });
                                 });
                             });
@@ -137,7 +137,7 @@ function setupExp() {
     });
     interStimuliBreakTrainingRoutine.addComponent(timeSettingsTraining);
     interStimuliBreakTrainingRoutine.addComponent(breakTextTraining);
-    interStimuliBreakTrainingRoutine.addComponent(progressBarTraining);
+    // interStimuliBreakTrainingRoutine.addComponent(progressBarTraining);
     interStimuliBreakTrainingRoutine.addComponent(tsb);
     trainingLoop.addRoutine(interStimuliBreakTrainingRoutine);
     // interStimuliBreakTrainingRoutine ends here
@@ -178,6 +178,7 @@ function setupExp() {
         text: function () {
             return trainingLoop.currentTrial['stimuli'];
         },
+        textFont: sloanFont,
         // timestart: 1000,
         timestop: 2000
     });
@@ -193,7 +194,7 @@ function setupExp() {
     });
     var responseKeyboardTrainingComponent = new KeyboardResponse({
         name: 'response_sensible',
-        keys: [49, 51]
+        keys: alphabetsAndNumbers
     });
     stimuliResponseTrainingRoutine.addComponent(responseHelpTrainingComponent);
     stimuliResponseTrainingRoutine.addComponent(responseKeyboardTrainingComponent);
@@ -202,20 +203,30 @@ function setupExp() {
 
     // feedbackTrainingRoutine starts here
     var feedbackTrainingRoutine = new Routine();
+    var isCorrect = false;
     var feedbackSound = new SoundStimulus({
         name: 'feedback_sound',
         sound: function () {
             if (responseKeyboardTrainingComponent.response == trainingLoop.currentTrial['corr']) {
                 tsb.n_counter = tsb.p_counter + 1;
+                isCorrect = true;
                 console.log("correct!");
                 return soundPositiveFeedback;
             } else {
                 tsb.n_counter = 0;
+                isCorrect = false;
                 console.log("incorrect!");
                 return soundNegativeFeedback;
             }
         },
-        timestop: 500
+        backgroundColor: function () {
+            if(isCorrect) {
+                return 'rgb(0,255,0)';
+            } else {
+                return 'rgb(255,0,0)';
+            }
+        },
+        timestop: 200
     });
     feedbackTrainingRoutine.addComponent(feedbackSound);
     trainingLoop.addRoutine(feedbackTrainingRoutine);
@@ -292,7 +303,7 @@ function setupExp() {
     });
     interStimuliBreakRoutine.addComponent(timeSettings);
     interStimuliBreakRoutine.addComponent(breakText);
-    interStimuliBreakRoutine.addComponent(progressBar);
+    // interStimuliBreakRoutine.addComponent(progressBar);
     interStimuliBreakRoutine.addComponent(tsbMain);
     trialsLoop.addRoutine(interStimuliBreakRoutine);
     // interStimuliBreakRoutine ends here
@@ -316,7 +327,6 @@ function setupExp() {
     var fixationMain = new TextStimulus({
         name: 'fixation',
         text: '+'
-        // timestop: 1000
     });
     var fixationResponseMain = new KeyboardResponse({
         name: 'fixation_response_main'
@@ -333,6 +343,7 @@ function setupExp() {
         text: function () {
             return trialsLoop.currentTrial['stimuli'];
         },
+        textFont: sloanFont,
         // timestart: 1000,
         timestop: 2000
     });
@@ -348,7 +359,7 @@ function setupExp() {
     });
     var responseKeyboardComponent = new KeyboardResponse({
         name: 'response_sensible',
-        keys: [49, 51]
+        keys: alphabetsAndNumbers
     });
     stimuliResponseRoutine.addComponent(responseHelpComponent);
     stimuliResponseRoutine.addComponent(responseKeyboardComponent);
@@ -356,26 +367,24 @@ function setupExp() {
     // stimuliResponseRoutine ends here
 
     // feedbackMainRoutine starts here
-    var feedbackMainRoutine = new Routine();
-    var feedbackText = new TextStimulus({
-        name: 'feedback_text',
-        text: function () {
-            if (responseKeyboardComponent.response == trialsLoop.currentTrial['corr']) {
-                tsbMain.n_counter = tsbMain.p_counter + 1;
-                console.log(tsbMain.n_counter);
-                return 'Your answer was correct.';
-            } else {
-                tsbMain.n_counter = 0;
-                return "Your answer was incorrect.";
-            }
-        }
-    });
-    var feedbackResponse = new KeyboardResponse({
-        name: 'feedback_next'
-    });
-    feedbackMainRoutine.addComponent(feedbackText);
-    feedbackMainRoutine.addComponent(feedbackResponse);
-    // trialsLoop.addRoutine(feedbackMainRoutine);  // no beedback in main loop
+    // var feedbackMainRoutine = new Routine();
+    // var feedbackMainSound = new SoundStimulus({
+    //     name: 'feedback_sound',
+    //     sound: function () {
+    //         if (responseKeyboardTrainingComponent.response == trainingLoop.currentTrial['corr']) {
+    //             tsb.n_counter = tsb.p_counter + 1;
+    //             console.log("correct!");
+    //             return soundPositiveFeedback;
+    //         } else {
+    //             tsb.n_counter = 0;
+    //             console.log("incorrect!");
+    //             return soundNegativeFeedback;
+    //         }
+    //     },
+    //     timestop: 500
+    // });
+    // feedbackMainRoutine.addComponent(feedbackMainSound);
+    // trialsLoop.addRoutine(feedbackMainRoutine);
     // feedbackMainRoutine ends here
 
     exp.addRoutine(trialsLoop);

@@ -277,6 +277,7 @@ class TextStimulus extends P5Component{
     
     constructor({name,
         text,
+        textFont = 'Helvetica',
         textSize = 32,
         pos,
         color = [0,0,0],
@@ -287,7 +288,8 @@ class TextStimulus extends P5Component{
             this.text = setProperty(text);
             this.color = setProperty(color);
             this.textSize = setProperty(textSize);
-            this.update_map = {'text' : text, 'textSize' : textSize, 'pos' : pos, 'color' : color, 'rotation': rotation};
+            this.textFont = setProperty(textFont);
+            this.update_map = {'text' : text, 'textSize' : textSize, 'pos' : pos, 'color' : color, 'rotation': rotation, 'textFont': textFont};
         }
 
         draw(){
@@ -295,6 +297,7 @@ class TextStimulus extends P5Component{
             this.drawDecorator(function(){
                 fill(color(that.color));
                 textSize(that.textSize);
+                textFont(that.textFont);
                 textAlign(CENTER, CENTER);
                 rectMode(CENTER);
                 text(that.text, that.pos[0] * width, that.pos[1] * height, 2/3*width, 2/3*height);
@@ -306,23 +309,24 @@ class TextStimulus extends P5Component{
 class SoundStimulus extends P5Component{
     
     constructor({name,
+        backgroundColor,
         sound,
         pos,
-        color = [0,0,0],
         rotation,
         timestart,
         timestop} = {}){
             super({name, pos, rotation, timestart, timestop});
-            this.color = setProperty(color);
+            this.backgroundColor = setProperty(backgroundColor);
             this.sound = setProperty(sound);
-            this.update_map = {'pos' : pos, 'color' : color, 'rotation': rotation, 'sound': sound};
+            this.update_map = {'pos' : pos, 'rotation': rotation, 'sound': sound, 'backgroundColor': backgroundColor};
         }
 
         draw(){
             var that = this;
             this.drawDecorator(function(){
-                fill(color(that.color));
+                // fill(color(that.color));
                 that.sound.play();
+                background(that.backgroundColor);
             });
         }
     
