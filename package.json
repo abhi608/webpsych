@@ -21,9 +21,11 @@
   },
   "homepage": "https://github.com/abhi608/webpsych#readme",
   "dependencies": {
+    "everpolate": "^0.0.3",
     "express": "4.17.1",
     "mathjs": "9.1.0",
     "mongodb": "3.6.3",
+    "numjs": "^0.16.0",
     "prompt-sync": "4.2.0",
     "prompt-sync-history": "1.0.1",
     "uuid": "8.3.1"
