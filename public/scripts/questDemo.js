@@ -2,9 +2,6 @@ var nj = require('numjs');
 var math = require('mathjs');
 var linear = require('everpolate').linear;
 const QuickChart = require('quickchart-js');
-const { t } = require('tar');
-const { index } = require('mathjs');
-const { response } = require('express');
 class Quest {
     constructor(tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain = 0.01, range = null, plotIt = false) {
         var dim;
@@ -28,7 +25,7 @@ class Quest {
         this.gamma = gamma;
         this.grain = grain;
         this.dim = dim;
-        this.plotIt = plotIt;
+        this.plotIt = true;
         this.recompute();
     }
 
@@ -67,45 +64,11 @@ class Quest {
 
         if(this.plotIt) {
             // plot(this.x2, this.p2)
-            const chart = new QuickChart();
-
-            chart.setWidth(500)
-            chart.setHeight(300);
-
-            chart.setConfig({
-            type: 'line',
-            data: {
-                labels: this.x2,
-                datasets: [
-                    {
-                        label: '',
-                        // backgroundColor: 'rgb(255, 99, 132)',
-                        // borderColor: 'rgb(255, 99, 132)',
-                        data: this.p2,
-                        fill: false,
-                        borderWidth: 1,
-                    },
-                ],
-            },
-            options: {
-                title: {
-                display: true,
-                text: 'Actual Psychometric functions',
-                },
-            },
-            });
-
-            // Print the chart URL
-            console.log(chart.getUrl());
-
-            // Get the image...
-            const image = chart.toBinary();
-
-            // Or write it to a file
-            chart.toFile('chart.png');
-
-            // Print the chart URL
-            console.log(chart.getUrl());
+            let tmpArr = [];
+            for(let k=0; k<this.x2.length; k++) {
+                tmpArr.push({"x": this.x2[k], "y": this.p2[k]});
+            }
+            plot([tmpArr], "./graphs/InitialPsychometricFunction.png", "Initial Psychometric Function", 1);
         }
 
         if((Math.min(this.p2[0], this.p2[this.p2.length - 1]) > this.pThreshold) || (Math.max(this.p2[0], this.p2[this.p2.length - 1]) < this.pThreshold)) {
@@ -206,9 +169,114 @@ class Quest {
         let t = Math.min(Math.max(tTest - tActual, x2min), x2max);
         let response = interp1(this.x2, this.p2, null, t) > Math.random();
 
-        // TO-DO: plot graph here
+        // plot graph here
         if(plotIt > 0) {
+            let tc = t;
+            const col = ['red', 'green'];
+            let tmp = [];
+            t = [];
+            for(let i=0; i<this.trialCount; i++) {
+                t.push(math.min(Math.max(this.intensity[i]-tActual, x2min), x2max));
+            }
+            let positive = null;
+            let negative = null;
+            let pcol = null; 
+            if(plotIt == 2) {
+                let tmp1 = [];
+                for(let i=0; i<this.trialCount; i++) {
+                    tmp1.push(this.response[i]);
+                }
+                positive = findGreaterThanZero(tmp1);
+                negative = findLessThanEqualToZero(tmp1);
+                pcol = 'rgb(0,128,0)';
+            } else {
+                positive = [...Array(this.trialCount).keys()];
+                negative = [];
+                pcol = 'rgb(0,0,0)';
+            }
 
+            // plot 1
+            let data = [];
+            let dataset = [];
+            for(let i=0; i<this.x2.length; i++) {
+                dataset.push({"x": this.x2[i]+tActual, "y": this.p2[i]});
+            }
+            let curObj = {
+                showLine: true,
+                fill: false,
+                borderColor: 'rgb(0, 0, 139)',  // blue
+                pointRadius: 0,
+                data: dataset
+            };
+            data.push(curObj);
+            
+            // plot 2
+            let tmp1 = [];
+            dataset = [];
+            for(let i=0; i<positive.length; i++) {
+                tmp1.push(t[positive[i]]);
+            }
+            let tmp2 = interp1(this.x2, this.p2, null, tmp1);
+            for(let i=0; i<tmp1.length; i++) {
+                dataset.push({"x": tmp1[i] + tActual, "y": tmp2[i]});
+            }
+            curObj = {
+                showLine: false,
+                fill: false,
+                pointBorderColor: pcol,  // green or black
+                pointRadius: 5,
+                data: dataset
+            };
+            data.push(curObj);
+
+            // plot 3
+            tmp1 = [];
+            dataset = [];
+            for(let i=0; i<negative.length; i++) {
+                tmp1.push(t[negative[i]]);
+            }
+            tmp2 = interp1(this.x2, this.p2, null, tmp1);
+            for(let i=0; i<tmp1.length; i++) {
+                dataset.push({"x": tmp1[i] + tActual, "y": tmp2[i]});
+            }
+            curObj = {
+                showLine: false,
+                fill: false,
+                pointBorderColor: 'rgb(255,0,0)',  // red
+                pointRadius: 5,
+                data: dataset
+            };
+            data.push(curObj);
+
+            // plot 4
+            tmp1 = [];
+            for(let i=0; i<this.x2.length; i++) {
+                tmp1.push(this.x2[i]+tActual);
+            }
+            tmp2 = interp1(tmp1, this.p2, null, tActual);
+            dataset = [{"x": tActual, "y": tmp2}];
+            curObj = {
+                showLine: false,
+                fill: false,
+                pointRadius: 5,
+                pointStyle: 'cross',
+                pointBorderColor: 'rgb(255,255,0)',  // yellow
+                data: dataset
+            };
+            data.push(curObj);
+
+            // plot 5
+            dataset = [{"x": tc+tActual, "y": interp1(this.x2, this.p2, null, tc)}];
+            curObj = {
+                showLine: false,
+                fill: false,
+                pointRadius: 5,
+                pointStyle: 'rect',
+                pointBorderColor: 'rgb(255,165,0)',  // orange
+                data: dataset
+            };
+            data.push(curObj);
+            if(response) return [1, data]; else return [0, data];
         }
 
         if(response) return 1; else return 0;
@@ -280,7 +348,7 @@ function nthPow(arr, n) {
 }
 
 function dotProduct(arr1, arr2) {
-    ret = [];
+    let ret = [];
     for(let i=0; i<arr1.length; i++) {
         ret.push(arr1[i] * arr2[i]);
     }
@@ -288,7 +356,7 @@ function dotProduct(arr1, arr2) {
 }
 
 function greaterThanZero(arr) {
-    ret = [];
+    let ret = [];
     for(let i=0; i<arr.length; i++) {
         if(arr[i] > 0) ret.push(1);
         else ret.push(0);
@@ -328,7 +396,8 @@ function interp1(x, y, idx, pred) {
             tmpY.push(y[idx[i]]);
         }
     }
-    let val = linear(pred, tmpX, tmpY)[0];
+    let val = linear(pred, tmpX, tmpY);
+    if(val.length == 1) return val[0];
     return val;
 }
 
@@ -365,6 +434,24 @@ function findNonZero(arr) {
     }, [])
 }
 
+function findGreaterThanZero(arr) {
+    arr = (typeof arr != "undefined" && arr instanceof Array) ? arr : [arr]
+
+    return arr.reduce((ret_arr, number, index) => {
+        if (number > 0) ret_arr.push(index)
+        return ret_arr
+    }, [])
+}
+
+function findLessThanEqualToZero(arr) {
+    arr = (typeof arr != "undefined" && arr instanceof Array) ? arr : [arr]
+
+    return arr.reduce((ret_arr, number, index) => {
+        if (number <= 0) ret_arr.push(index)
+        return ret_arr
+    }, [])
+}
+
 function getSecsFunction() {
     let d = new Date();
     return d.getTime();
@@ -388,76 +475,43 @@ function isinf(arr) {
 
 }
 
-function plot(dataPoints, fileName, title = "") {
-    dataset = []
-    for(let i=0; i<dataPoints.length; i++) {
-        let curObj = {
-            label: '',
-            showLine: true,
-            fill: false,
-            pointRadius: 0,
-            data: dataPoints[i]
-        };
-        dataset.push(curObj);
+function plot(dataPoints, fileName, title = "", type=null) {
+    let dataset = [];
+    if(type == 1) {
+        for(let i=0; i<dataPoints.length; i++) {
+            let curObj = {
+                label: '',
+                showLine: true,
+                fill: false,
+                pointRadius: 0,
+                data: dataPoints[i]
+            };
+            dataset.push(curObj);
+        }
+    } else if(type == 2) {
+        dataset = dataPoints;
     }
+    
     const chart = new QuickChart();
-    chart.setWidth(800);
-    chart.setHeight(800);
+    chart.setWidth(1500);
+    chart.setHeight(1500);
     chart.setConfig({
         type: 'scatter',
         data: {
             datasets: dataset
         },
         options: {
+            legend: {
+                display: false
+            },
             title: {
                 display: true,
                 text: title,
             },
         }
     });
-    // console.log(chart.getUrl());
     chart.toFile(fileName);
-
-    // const chart = new QuickChart();
-    // chart.setWidth(800)
-    // chart.setHeight(800);
-    // chart.setConfig({
-    // type: 'line',
-    // data: {
-    //     labels: this.x2,
-    //     datasets: [
-    //         {
-    //             label: '',
-    //             // backgroundColor: 'rgb(255, 99, 132)',
-    //             // borderColor: 'rgb(255, 99, 132)',
-    //             data: this.p2,
-    //             fill: false,
-    //             pointRadius: 0,
-    //         },
-    //     ],
-    // },
-    // options: {
-    //     title: {
-    //     display: true,
-    //     text: 'Actual Psychometric functions',
-    //     },
-    // },
-    // });
-
-    // // Print the chart URL
-    // console.log(chart.getUrl());
-
-    // // Get the image...
-    // const image = chart.toBinary();
-
-    // // Or write it to a file
-    // chart.toFile('chart.png');
-
-    // // Print the chart URL
-    // console.log(chart.getUrl());
 }
-
-
 
 function demo() {
     console.log("Welcome to QuestDemo. Quest will now estimate an observer's threshold.\n");
@@ -480,7 +534,7 @@ function demo() {
     var delta = 0.01;
     var gamma = 0.5;
     var q = new Quest(tGuess, tGuessSd, pThreshold, beta, delta, gamma);
-    console.log(q);
+    // console.log(q);
     q.normalizePdf = true;
 
     var trialsDesired = 40;
@@ -492,8 +546,11 @@ function demo() {
         timeSplit = getSecsFunction();
         let response = null;
         if(animate) {
-            // TODO : plot figure here
-            response = q.simulate(tTest, tActual, 2);
+            // plot figure here
+            let tmpArr = q.simulate(tTest, tActual, 2);
+            response = tmpArr[0];
+            let data = tmpArr[1];
+            plot(data, './graphs/psychometricFunc-Trial_' + (k+1) + '.png', 'Actual psychometric function, and the points tested.', 2);
         } else {
             response = q.simulate(tTest, tActual);
         }
@@ -501,7 +558,7 @@ function demo() {
         timeZero = timeZero + getSecsFunction() - timeSplit;
         q.update(tTest, response);
         if(animate) {
-            //TODO : plot figure here
+            // plot figure here
             let tmpArr = [];
             for(let i=0; i<q.x.length; i++) {
                 tmpArr.push({"x": q.x[i]+q.tGuess, "y": q.pdf[i]})
@@ -509,7 +566,7 @@ function demo() {
             arrToGraph.push(tmpArr);
         }
     }
-    plot(arrToGraph, 'posteriorPDF.png', 'Posterior PDF');
+    plot(arrToGraph, './graphs/posteriorPDF.png', 'Posterior PDF', 1);
     // Print timing of results.
     console.log(`${1000*(getSecsFunction()-timeZero)/trialsDesired} ms/trial`);
     let t = q.mean();
