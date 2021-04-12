@@ -1,6 +1,7 @@
 var nj = require('numjs');
 var math = require('mathjs');
 var linear = require('everpolate').linear;
+const QuickChart = require('quickchart-js');
 const { t } = require('tar');
 const { index } = require('mathjs');
 const { response } = require('express');
@@ -66,6 +67,45 @@ class Quest {
 
         if(this.plotIt) {
             // plot(this.x2, this.p2)
+            const chart = new QuickChart();
+
+            chart.setWidth(500)
+            chart.setHeight(300);
+
+            chart.setConfig({
+            type: 'line',
+            data: {
+                labels: this.x2,
+                datasets: [
+                    {
+                        label: '',
+                        // backgroundColor: 'rgb(255, 99, 132)',
+                        // borderColor: 'rgb(255, 99, 132)',
+                        data: this.p2,
+                        fill: false,
+                        borderWidth: 1,
+                    },
+                ],
+            },
+            options: {
+                title: {
+                display: true,
+                text: 'Actual Psychometric functions',
+                },
+            },
+            });
+
+            // Print the chart URL
+            console.log(chart.getUrl());
+
+            // Get the image...
+            const image = chart.toBinary();
+
+            // Or write it to a file
+            chart.toFile('chart.png');
+
+            // Print the chart URL
+            console.log(chart.getUrl());
         }
 
         if((Math.min(this.p2[0], this.p2[this.p2.length - 1]) > this.pThreshold) || (Math.max(this.p2[0], this.p2[this.p2.length - 1]) < this.pThreshold)) {
@@ -160,13 +200,17 @@ class Quest {
         return t;
     }
 
-    simulate(tTest, tActual, plotIt = null) {
+    simulate(tTest, tActual, plotIt = 0) {
         let x2min = Math.min(this.x2[0], this.x2[this.x2.length - 1]);
         let x2max = Math.max(this.x2[0], this.x2[this.x2.length - 1]);
         let t = Math.min(Math.max(tTest - tActual, x2min), x2max);
         let response = interp1(this.x2, this.p2, null, t) > Math.random();
 
         // TO-DO: plot graph here
+        if(plotIt > 0) {
+
+        }
+
         if(response) return 1; else return 0;
     }
 
@@ -289,7 +333,13 @@ function interp1(x, y, idx, pred) {
 }
 
 function calculation(base, exponent) {
-    let tmp = math.exp(math.pow(base, exponent));
+    let tmp = null;
+    if(base < 0) {
+        tmp = math.exp(-1 * math.pow(-1 * base, exponent));
+    } else {
+        tmp = math.exp(math.pow(base, exponent));
+    }
+    // let tmp = math.exp(math.pow(base, exponent));
     let ret = null;
     try {
         ret = math.number(tmp);
@@ -338,6 +388,77 @@ function isinf(arr) {
 
 }
 
+function plot(dataPoints, fileName, title = "") {
+    dataset = []
+    for(let i=0; i<dataPoints.length; i++) {
+        let curObj = {
+            label: '',
+            showLine: true,
+            fill: false,
+            pointRadius: 0,
+            data: dataPoints[i]
+        };
+        dataset.push(curObj);
+    }
+    const chart = new QuickChart();
+    chart.setWidth(800);
+    chart.setHeight(800);
+    chart.setConfig({
+        type: 'scatter',
+        data: {
+            datasets: dataset
+        },
+        options: {
+            title: {
+                display: true,
+                text: title,
+            },
+        }
+    });
+    // console.log(chart.getUrl());
+    chart.toFile(fileName);
+
+    // const chart = new QuickChart();
+    // chart.setWidth(800)
+    // chart.setHeight(800);
+    // chart.setConfig({
+    // type: 'line',
+    // data: {
+    //     labels: this.x2,
+    //     datasets: [
+    //         {
+    //             label: '',
+    //             // backgroundColor: 'rgb(255, 99, 132)',
+    //             // borderColor: 'rgb(255, 99, 132)',
+    //             data: this.p2,
+    //             fill: false,
+    //             pointRadius: 0,
+    //         },
+    //     ],
+    // },
+    // options: {
+    //     title: {
+    //     display: true,
+    //     text: 'Actual Psychometric functions',
+    //     },
+    // },
+    // });
+
+    // // Print the chart URL
+    // console.log(chart.getUrl());
+
+    // // Get the image...
+    // const image = chart.toBinary();
+
+    // // Or write it to a file
+    // chart.toFile('chart.png');
+
+    // // Print the chart URL
+    // console.log(chart.getUrl());
+}
+
+
+
 function demo() {
     console.log("Welcome to QuestDemo. Quest will now estimate an observer's threshold.\n");
     console.log("The intensity scale is abstract, but usually we think of it as representing\n");
@@ -365,6 +486,7 @@ function demo() {
     var trialsDesired = 40;
     var wrongRight = ["wrong", "right"];
     var timeZero = getSecsFunction();
+    var arrToGraph = [];
     for (let k = 0; k < trialsDesired; k++) {
         tTest = q.quantile();
         timeSplit = getSecsFunction();
@@ -380,8 +502,14 @@ function demo() {
         q.update(tTest, response);
         if(animate) {
             //TODO : plot figure here
+            let tmpArr = [];
+            for(let i=0; i<q.x.length; i++) {
+                tmpArr.push({"x": q.x[i]+q.tGuess, "y": q.pdf[i]})
+            }
+            arrToGraph.push(tmpArr);
         }
     }
+    plot(arrToGraph, 'fig1.png', 'Posterior PDF');
     // Print timing of results.
     console.log(`${1000*(getSecsFunction()-timeZero)/trialsDesired} ms/trial`);
     let t = q.mean();

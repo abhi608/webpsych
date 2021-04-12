@@ -21,13 +21,17 @@
   },
   "homepage": "https://github.com/abhi608/webpsych#readme",
   "dependencies": {
+    "chartjs": "^0.3.24",
     "everpolate": "^0.0.3",
     "express": "4.17.1",
     "mathjs": "9.1.0",
     "mongodb": "3.6.3",
     "numjs": "^0.16.0",
+    "plotly": "^1.0.6",
+    "plotly.js-dist": "^1.58.4",
     "prompt-sync": "4.2.0",
     "prompt-sync-history": "1.0.1",
+    "quickchart-js": "^1.0.7",
     "uuid": "8.3.1"
   }
 }
