@@ -509,7 +509,7 @@ function demo() {
             arrToGraph.push(tmpArr);
         }
     }
-    plot(arrToGraph, 'fig1.png', 'Posterior PDF');
+    plot(arrToGraph, 'posteriorPDF.png', 'Posterior PDF');
     // Print timing of results.
     console.log(`${1000*(getSecsFunction()-timeZero)/trialsDesired} ms/trial`);
     let t = q.mean();
