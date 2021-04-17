@@ -38,6 +38,7 @@ function setup() {
                                         pelliFont = loadFont('../fonts/Pelli.otf', function () {
                                             sloanFont = loadFont('../fonts/Sloan.otf', function () {
                                                 console.log("Everything loaded!");
+                                                console.log("conditions: ", conditions);
                                                 setupExp();
                                             });
                                         });

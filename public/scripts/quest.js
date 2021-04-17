@@ -1,7 +1,3 @@
-var nj = require('numjs');
-var math = require('mathjs');
-var linear = require('everpolate').linear;
-const QuickChart = require('quickchart-js');
 class Quest {
     constructor(tGuess, tGuessSd, pThreshold, beta, delta, gamma, grain = 0.01, range = null, plotIt = false) {
         var dim;
@@ -63,12 +59,7 @@ class Quest {
         }
 
         if(this.plotIt) {
-            // plot(this.x2, this.p2)
-            let tmpArr = [];
-            for(let k=0; k<this.x2.length; k++) {
-                tmpArr.push({"x": this.x2[k], "y": this.p2[k]});
-            }
-            plot([tmpArr], "./graphs/InitialPsychometricFunction.png", "Initial Psychometric Function", 1);
+            // do nothing
         }
 
         if((Math.min(this.p2[0], this.p2[this.p2.length - 1]) > this.pThreshold) || (Math.max(this.p2[0], this.p2[this.p2.length - 1]) < this.pThreshold)) {
@@ -168,117 +159,9 @@ class Quest {
         let x2max = Math.max(this.x2[0], this.x2[this.x2.length - 1]);
         let t = Math.min(Math.max(tTest - tActual, x2min), x2max);
         let response = interp1(this.x2, this.p2, null, t) > Math.random();
-
-        // plot graph here
         if(plotIt > 0) {
-            let tc = t;
-            const col = ['red', 'green'];
-            let tmp = [];
-            t = [];
-            for(let i=0; i<this.trialCount; i++) {
-                t.push(math.min(Math.max(this.intensity[i]-tActual, x2min), x2max));
-            }
-            let positive = null;
-            let negative = null;
-            let pcol = null; 
-            if(plotIt == 2) {
-                let tmp1 = [];
-                for(let i=0; i<this.trialCount; i++) {
-                    tmp1.push(this.response[i]);
-                }
-                positive = findGreaterThanZero(tmp1);
-                negative = findLessThanEqualToZero(tmp1);
-                pcol = 'rgb(0,128,0)';
-            } else {
-                positive = [...Array(this.trialCount).keys()];
-                negative = [];
-                pcol = 'rgb(0,0,0)';
-            }
-
-            // plot 1
-            let data = [];
-            let dataset = [];
-            for(let i=0; i<this.x2.length; i++) {
-                dataset.push({"x": this.x2[i]+tActual, "y": this.p2[i]});
-            }
-            let curObj = {
-                showLine: true,
-                fill: false,
-                borderColor: 'rgb(0, 0, 139)',  // blue
-                pointRadius: 0,
-                data: dataset
-            };
-            data.push(curObj);
-            
-            // plot 2
-            let tmp1 = [];
-            dataset = [];
-            for(let i=0; i<positive.length; i++) {
-                tmp1.push(t[positive[i]]);
-            }
-            let tmp2 = interp1(this.x2, this.p2, null, tmp1);
-            for(let i=0; i<tmp1.length; i++) {
-                dataset.push({"x": tmp1[i] + tActual, "y": tmp2[i]});
-            }
-            curObj = {
-                showLine: false,
-                fill: false,
-                pointBorderColor: pcol,  // green or black
-                pointRadius: 5,
-                data: dataset
-            };
-            data.push(curObj);
-
-            // plot 3
-            tmp1 = [];
-            dataset = [];
-            for(let i=0; i<negative.length; i++) {
-                tmp1.push(t[negative[i]]);
-            }
-            tmp2 = interp1(this.x2, this.p2, null, tmp1);
-            for(let i=0; i<tmp1.length; i++) {
-                dataset.push({"x": tmp1[i] + tActual, "y": tmp2[i]});
-            }
-            curObj = {
-                showLine: false,
-                fill: false,
-                pointBorderColor: 'rgb(255,0,0)',  // red
-                pointRadius: 5,
-                data: dataset
-            };
-            data.push(curObj);
-
-            // plot 4
-            tmp1 = [];
-            for(let i=0; i<this.x2.length; i++) {
-                tmp1.push(this.x2[i]+tActual);
-            }
-            tmp2 = interp1(tmp1, this.p2, null, tActual);
-            dataset = [{"x": tActual, "y": tmp2}];
-            curObj = {
-                showLine: false,
-                fill: false,
-                pointRadius: 5,
-                pointStyle: 'cross',
-                pointBorderColor: 'rgb(255,255,0)',  // yellow
-                data: dataset
-            };
-            data.push(curObj);
-
-            // plot 5
-            dataset = [{"x": tc+tActual, "y": interp1(this.x2, this.p2, null, tc)}];
-            curObj = {
-                showLine: false,
-                fill: false,
-                pointRadius: 5,
-                pointStyle: 'rect',
-                pointBorderColor: 'rgb(255,165,0)',  // orange
-                data: dataset
-            };
-            data.push(curObj);
-            if(response) return [1, data]; else return [0, data];
+            // do nothing
         }
-
         if(response) return 1; else return 0;
     }
 
@@ -396,7 +279,7 @@ function interp1(x, y, idx, pred) {
             tmpY.push(y[idx[i]]);
         }
     }
-    let val = linear(pred, tmpX, tmpY);
+    let val = everpolate.linear(pred, tmpX, tmpY);
     if(val.length == 1) return val[0];
     return val;
 }
@@ -475,44 +358,6 @@ function isinf(arr) {
 
 }
 
-function plot(dataPoints, fileName, title = "", type=null) {
-    let dataset = [];
-    if(type == 1) {
-        for(let i=0; i<dataPoints.length; i++) {
-            let curObj = {
-                label: '',
-                showLine: true,
-                fill: false,
-                pointRadius: 0,
-                data: dataPoints[i]
-            };
-            dataset.push(curObj);
-        }
-    } else if(type == 2) {
-        dataset = dataPoints;
-    }
-    
-    const chart = new QuickChart();
-    chart.setWidth(1500);
-    chart.setHeight(1500);
-    chart.setConfig({
-        type: 'scatter',
-        data: {
-            datasets: dataset
-        },
-        options: {
-            legend: {
-                display: false
-            },
-            title: {
-                display: true,
-                text: title,
-            },
-        }
-    });
-    chart.toFile(fileName);
-}
-
 function demo() {
     console.log("Welcome to QuestDemo. Quest will now estimate an observer's threshold.\n");
     console.log("The intensity scale is abstract, but usually we think of it as representing\n");
@@ -546,11 +391,7 @@ function demo() {
         let timeSplit = getSecsFunction();
         let response = null;
         if(animate) {
-            // plot figure here
-            let tmpArr = q.simulate(tTest, tActual, 2);
-            response = tmpArr[0];
-            let data = tmpArr[1];
-            plot(data, './graphs/psychometricFunc-Trial_' + (k+1) + '.png', 'Actual psychometric function, and the points tested.', 2);
+            response = q.simulate(tTest, tActual, 2);
         } else {
             response = q.simulate(tTest, tActual);
         }
@@ -558,15 +399,9 @@ function demo() {
         timeZero = timeZero + getSecsFunction() - timeSplit;
         q.update(tTest, response);
         if(animate) {
-            // plot figure here
-            let tmpArr = [];
-            for(let i=0; i<q.x.length; i++) {
-                tmpArr.push({"x": q.x[i]+q.tGuess, "y": q.pdf[i]})
-            }
-            arrToGraph.push(tmpArr);
+            // do nothing
         }
     }
-    plot(arrToGraph, './graphs/posteriorPDF.png', 'Posterior PDF', 1);
     // Print timing of results.
     console.log(`${1000*(getSecsFunction()-timeZero)/trialsDesired} ms/trial`);
     let t = q.mean();
@@ -574,4 +409,4 @@ function demo() {
     console.log(`Final threshold estimate (mean+-sd) is ${t} +- ${sd}`);
 }
 
-demo();
+// demo();
