@@ -68,7 +68,7 @@ function setupExp() {
             'participant': Math.random().toString(36).substring(7)
         }
     });
-    // exp.addRoutine(exp_info_box);  ---------------------
+    exp.addRoutine(exp_info_box);
     // Experiment info ends here
 
 
@@ -89,7 +89,7 @@ function setupExp() {
     }));
     instructions_loop.addRoutine(instr);
     //instr routine ends here
-    // exp.addRoutine(instructions_loop);  --------------
+    exp.addRoutine(instructions_loop);
     // Instructions loop ends here
 
 
@@ -232,7 +232,7 @@ function setupExp() {
     feedbackTrainingRoutine.addComponent(feedbackSound);
     trainingLoop.addRoutine(feedbackTrainingRoutine);
     // feedbackTrainingRoutine ends here
-    // exp.addRoutine(trainingLoop); -----------------------
+    exp.addRoutine(trainingLoop);
     // Training Session Loop ends here
 
 
@@ -254,30 +254,14 @@ function setupExp() {
     }));
     intersessionInstructionsLoop.addRoutine(intersessionInstructionsRoutine);
     // intersessionInstructionsRoutine ends here
-    // exp.addRoutine(intersessionInstructionsLoop); ----------------
+    exp.addRoutine(intersessionInstructionsLoop);
     // intersessionInstructionsLoop ends here
 
 
 
-    // Now begins the main trial. Initialize quest and start
-    let tGuess = -1;
-    let tGuessSd = 2;
-    let pThreshold = 0.82;
-    let beta = 3.5;
-    let delta = 0.01;
-    let gamma = 0.5;
-    var q = new Quest(tGuess, tGuessSd, pThreshold, beta, delta, gamma);
-    console.log("q: ", q);
-    q.normalizePdf = true;
-    let trialsDesired = 10;
-    let wrongRight = ["wrong", "right"];
-    let timeZero = getSecsFunction();
-    let sizeInPixels = getSizeInPx(q.quantile());
-    let curSymbol = getNewSymbol();
-    let initialCond = [{"": "0", "corr": curSymbol.keyCode, "stimuli": curSymbol.symbol, "sizeInPix": sizeInPixels}];
 
     // Main session (trialsLoop) starts here
-    var trialsLoop = new Loop(initialCond, 1, trialsDesired);
+    var trialsLoop = new Loop(conditions, 1);
 
     // interStimuliBreakRoutine starts here
     var interStimuliBreakRoutine = new Routine();
@@ -361,9 +345,6 @@ function setupExp() {
             return trialsLoop.currentTrial['stimuli'];
         },
         textFont: sloanFont,
-        textSize: function() {
-            return trialsLoop.currentTrial['sizeInPix'];
-        },
         // timestart: 1000,
         timestop: 2000
     });
@@ -377,45 +358,35 @@ function setupExp() {
         name: 'instruction',
         text: 'Press the alphabet/number key on keyboard corresponding to the alphabet/number that you saw'
     });
-    var responseKeyboardComponent = new NewKeyboardResponse({
+    var responseKeyboardComponent = new KeyboardResponse({
         name: 'response_sensible',
-        keys: alphabetsAndNumbers,
-        trialsLoop: trialsLoop,
-        q: q,
-        action: true
+        keys: alphabetsAndNumbers
     });
     stimuliResponseRoutine.addComponent(responseHelpComponent);
     stimuliResponseRoutine.addComponent(responseKeyboardComponent);
     trialsLoop.addRoutine(stimuliResponseRoutine);
     // stimuliResponseRoutine ends here
 
-    // // feedbackMainRoutine starts here
+    // feedbackMainRoutine starts here
     // var feedbackMainRoutine = new Routine();
-    // var feedbackMainSound = new NextTrialStimulus({
-    //     name: 'next_trial_decision',
-    //     action: function() {
-    //         console.log("In action: ", responseKeyboardTrainingComponent.response, trainingLoop.currentTrial['corr']);
+    // var feedbackMainSound = new SoundStimulus({
+    //     name: 'feedback_sound',
+    //     sound: function () {
     //         if (responseKeyboardTrainingComponent.response == trainingLoop.currentTrial['corr']) {
     //             tsb.n_counter = tsb.p_counter + 1;
     //             console.log("correct!");
-    //             q.update(getSizeInDeg(trainingLoop.currentTrial['sizeInPix']), 1);
-    //             tTest = getSizeInPx(q.quantile());
-    //             let newTrial = {"": "0", "corr": 49, "stimuli": "B", "sizeInPix": tTest};
-    //             trialsLoop.addTrial(newTrial);
+    //             return soundPositiveFeedback;
     //         } else {
     //             tsb.n_counter = 0;
     //             console.log("incorrect!");
-    //             q.update(getSizeInDeg(trainingLoop.currentTrial['sizeInPix']), 0);
-    //             tTest = getSizeInPx(q.quantile());
-    //             let newTrial = {"": "0", "corr": 49, "stimuli": "C", "sizeInPix": tTest};
-    //             trialsLoop.addTrial(newTrial);
+    //             return soundNegativeFeedback;
     //         }
     //     },
-        
+    //     timestop: 500
     // });
     // feedbackMainRoutine.addComponent(feedbackMainSound);
     // trialsLoop.addRoutine(feedbackMainRoutine);
-    // // feedbackMainRoutine ends here
+    // feedbackMainRoutine ends here
 
     exp.addRoutine(trialsLoop);
     // trialsLoop ends here

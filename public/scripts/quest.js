@@ -385,7 +385,6 @@ function demo() {
     var trialsDesired = 40;
     var wrongRight = ["wrong", "right"];
     var timeZero = getSecsFunction();
-    var arrToGraph = [];
     for (let k = 0; k < trialsDesired; k++) {
         let tTest = q.quantile();
         let timeSplit = getSecsFunction();
@@ -408,5 +407,3 @@ function demo() {
     let sd = q.sd();
     console.log(`Final threshold estimate (mean+-sd) is ${t} +- ${sd}`);
 }
-
-// demo();

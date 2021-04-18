@@ -64,7 +64,9 @@ class Experiment{
     sendData(){
         var date = [year(), month(), day(), hour(), minute(), second()].join('-');
         if (this.server_url != null) {
-            httpPost(this.server_url, 'text', JSON.stringify({'title' : 'data', 'body' : this.data, 'date' : date, 'expname' : this.expname}), function(result) {
+            var curObj = {'title' : 'data', 'body' : this.data, 'date' : date, 'expname' : this.expname};
+            console.log("EXPERIMENT: ", curObj);
+            httpPost(this.server_url, 'text', JSON.stringify(curObj), function(result) {
                 noLoop();
                 background(255);
                 fill(0);
@@ -123,7 +125,7 @@ class Routine{
 }
 
 class Loop{
-    constructor(conditions, nrep = 1){
+    constructor(conditions, nrep = 1, nTrials=null){
         this.nrep = nrep;
         this.conditions = [];
         for (var i = 0; i < this.nrep; i++){
@@ -135,6 +137,7 @@ class Loop{
         this.routineCounter = 0;
         this.trialCounter = 0;
         this.currentRoutine = null;
+        this.nTrials = nTrials;
     }
 
     setExperiment(experiment){
@@ -178,6 +181,11 @@ class Loop{
         if (next){
             return this.nextRoutine();
         }
+    }
+
+    addTrial(trial) {
+        if(this.nTrials != null && this.conditions.length >= this.nTrials) return;
+        this.conditions.push(trial);
     }
 }
 
@@ -324,10 +332,31 @@ class SoundStimulus extends P5Component{
         draw(){
             var that = this;
             this.drawDecorator(function(){
-                // fill(color(that.color));
                 that.sound.play();
                 background(that.backgroundColor);
             });
+        }
+    
+}
+
+class NextTrialStimulus extends P5Component{
+    
+    constructor({name,
+        action} = {}){
+            super({name});
+            this.action = setProperty(action);
+            this.update_map = {'action' : action};
+        }
+
+        draw(){
+            // var that = this;
+            // that.action;
+            this.action;
+        }
+
+        update() {
+            this.finished = true;
+            return true;
         }
     
 }
@@ -458,6 +487,72 @@ class KeyboardResponse extends P5Component{
                 this.lock = true;
                 this.response = keyCode;
                 this.experiment.addData({name: this.name, 'rt': millis() - this.t_start, 'resp' : this.response});
+                if (this.force_end_of_routine){
+                    return false;
+                } else{
+                    return true;
+                }
+            } else {
+                return true;
+            };
+        
+        
+        }
+}
+
+class NewKeyboardResponse extends P5Component{
+    constructor({name,
+        keys = [ENTER],
+        timestart = 0,
+        timestop = null,
+        force_end_of_routine = true,
+        action = false,
+        trialsLoop = null,
+        q = null} = {}){
+
+            super({name, timestart, timestop});
+            this.keys = keys;
+            this.lock = true;
+            this.response = null;
+            this.action = action;
+            this.trialsLoop = trialsLoop;
+            this.q = q;
+            this.force_end_of_routine = force_end_of_routine;
+        }
+    
+        update(){
+            if (this.timestop != null & (millis() - this.t_start) - this.timestop > 0 ){
+                this.finished = true;
+            }
+            if (!keyIsPressed & this.lock){
+                this.lock = false;
+            }
+            if (keyIsPressed & this.keys.indexOf(keyCode) > -1 & !this.lock){
+                this.lock = true;
+                this.response = keyCode;
+
+                if(this.action) {
+                    console.log("IN ACTION: ", this.response, this.trialsLoop);
+                    if (this.response == this.trialsLoop.currentTrial['corr']) {
+                        console.log("correct!");
+                        this.q.update(getSizeInDeg(this.trialsLoop.currentTrial['sizeInPix']), 1);
+                        let sizeInPixels = getSizeInPx(this.q.quantile());
+                        let curSymbol = getNewSymbol();
+                        let newTrial = {"corr": curSymbol.keyCode, "stimuli": curSymbol.symbol, "sizeInPix": sizeInPixels};
+                        this.trialsLoop.addTrial(newTrial);
+                    } else {
+                        console.log("incorrect!");
+                        this.q.update(getSizeInDeg(this.trialsLoop.currentTrial['sizeInPix']), 0);
+                        let sizeInPixels = getSizeInPx(this.q.quantile());
+                        let curSymbol = getNewSymbol();
+                        let newTrial = {"corr": curSymbol.keyCode, "stimuli": curSymbol.symbol, "sizeInPix": sizeInPixels};
+                        this.trialsLoop.addTrial(newTrial);
+                    }
+                }
+
+                this.experiment.addData({name: this.name, 'rt': millis() - this.t_start, 
+                                        'resp' : convertKeyCodeToKeyCharacter(this.response),
+                                        'actual': this.trialsLoop.currentTrial['stimuli']});
                 if (this.force_end_of_routine){
                     return false;
                 } else{
@@ -718,4 +813,29 @@ function convertKeyCodeToKeyCharacter(code) {
         }
     }
     return undefined;
+}
+
+function getSizeInPx(deg) {
+    let pixPerCm = 37.7952755906;
+    return Math.round(Math.exp(deg) * pixPerCm);
+}
+
+function getSizeInDeg(pix) {
+    let pixPerCm = 37.7952755906;
+    return Math.log(pix / pixPerCm);
+}
+
+function getNewSymbol() {
+    let low = 65, high = 90;
+    let curSymbolCode = getRandomInt(65, 91);
+    let retObj = {};
+    retObj.symbol = convertKeyCodeToKeyCharacter(curSymbolCode).toUpperCase();
+    retObj.keyCode = curSymbolCode;
+    return retObj;
+}
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
 }
