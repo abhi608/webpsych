@@ -537,7 +537,7 @@ function demo() {
     // console.log(q);
     q.normalizePdf = true;
 
-    var trialsDesired = 40;
+    var trialsDesired = 4;
     var wrongRight = ["wrong", "right"];
     var timeZero = getSecsFunction();
     var arrToGraph = [];

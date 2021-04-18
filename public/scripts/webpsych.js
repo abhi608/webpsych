@@ -35,6 +35,7 @@ class Experiment{
     nextRoutine(){
         if (this.routineCounter +1 == this.routines.length) {
             noLoop();
+            this.computeQStats();
             this.sendData();
         } else{
             this.routineCounter += 1;
@@ -50,6 +51,16 @@ class Experiment{
         if (next){
             this.nextRoutine();
         }
+    }
+
+    setQ(q) {
+        this.q = q;
+    }
+
+    computeQStats() {
+        let mean = this.q.mean();
+        let sd = this.q.sd();
+        console.log("STATS: ", this.q, mean, sd);
     }
 
     addData(data){
@@ -339,19 +350,21 @@ class SoundStimulus extends P5Component{
     
 }
 
-class NextTrialStimulus extends P5Component{
+class QuestStats extends P5Component{
     
     constructor({name,
-        action} = {}){
+        q} = {}){
             super({name});
-            this.action = setProperty(action);
-            this.update_map = {'action' : action};
+            this.q = q;
+            this.update_map = {'q' : q};
         }
 
         draw(){
             // var that = this;
             // that.action;
-            this.action;
+            let mean = this.q.mean();
+            let std = this.q.std();
+            console.log("STATS: ", q, mean, std);
         }
 
         update() {
@@ -549,7 +562,7 @@ class NewKeyboardResponse extends P5Component{
                         this.trialsLoop.addTrial(newTrial);
                     }
                 }
-
+                this.experiment.setQ(this.q);
                 this.experiment.addData({name: this.name, 'rt': millis() - this.t_start, 
                                         'resp' : convertKeyCodeToKeyCharacter(this.response),
                                         'actual': this.trialsLoop.currentTrial['stimuli']});

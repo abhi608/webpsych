@@ -269,12 +269,11 @@ function setupExp() {
     var q = new Quest(tGuess, tGuessSd, pThreshold, beta, delta, gamma);
     console.log("q: ", q);
     q.normalizePdf = true;
-    let trialsDesired = 10;
-    let wrongRight = ["wrong", "right"];
-    let timeZero = getSecsFunction();
+    let trialsDesired = 4;
     let sizeInPixels = getSizeInPx(q.quantile());
     let curSymbol = getNewSymbol();
     let initialCond = [{"": "0", "corr": curSymbol.keyCode, "stimuli": curSymbol.symbol, "sizeInPix": sizeInPixels}];
+
 
     // Main session (trialsLoop) starts here
     var trialsLoop = new Loop(initialCond, 1, trialsDesired);
@@ -416,6 +415,16 @@ function setupExp() {
     // feedbackMainRoutine.addComponent(feedbackMainSound);
     // trialsLoop.addRoutine(feedbackMainRoutine);
     // // feedbackMainRoutine ends here
+
+
+    // var questComputeRoutine = new Routine();
+    // var questDataComponent = new QuestStats({
+    //     name: 'quest_result',
+    //     q: q
+    // });
+    // questComputeRoutine.addComponent(questDataComponent);
+    // trialsLoop.addRoutine(questComputeRoutine);
+
 
     exp.addRoutine(trialsLoop);
     // trialsLoop ends here
