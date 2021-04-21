@@ -60,7 +60,7 @@ class Experiment{
     computeQStats() {
         let mean = this.q.mean();
         let sd = this.q.sd();
-        console.log("STATS: ", this.q, mean, sd);
+        console.log("STATS: \nmean: ", mean, "\nstandard deviation: ", sd);
     }
 
     addData(data){
@@ -328,51 +328,47 @@ class TextStimulus extends P5Component{
 class SoundStimulus extends P5Component{
     
     constructor({name,
-        backgroundColor,
         sound,
         pos,
         rotation,
         timestart,
         timestop} = {}){
             super({name, pos, rotation, timestart, timestop});
-            this.backgroundColor = setProperty(backgroundColor);
             this.sound = setProperty(sound);
-            this.update_map = {'pos' : pos, 'rotation': rotation, 'sound': sound, 'backgroundColor': backgroundColor};
+            this.update_map = {'pos' : pos, 'rotation': rotation, 'sound': sound};
         }
 
         draw(){
             var that = this;
             this.drawDecorator(function(){
+                if(!that.sound) return;
                 that.sound.play();
-                background(that.backgroundColor);
             });
         }
     
 }
 
-class QuestStats extends P5Component{
+// class QuestStats extends P5Component{
     
-    constructor({name,
-        q} = {}){
-            super({name});
-            this.q = q;
-            this.update_map = {'q' : q};
-        }
+//     constructor({name,
+//         q} = {}){
+//             super({name});
+//             this.q = q;
+//             this.update_map = {'q' : q};
+//         }
 
-        draw(){
-            // var that = this;
-            // that.action;
-            let mean = this.q.mean();
-            let std = this.q.std();
-            console.log("STATS: ", q, mean, std);
-        }
+//         draw(){
+//             let mean = this.q.mean();
+//             let std = this.q.std();
+            
+//         }
 
-        update() {
-            this.finished = true;
-            return true;
-        }
+//         update() {
+//             this.finished = true;
+//             return true;
+//         }
     
-}
+// }
 
 class ImageStimulus extends P5Component{
     constructor({name,
@@ -399,7 +395,6 @@ class ImageStimulus extends P5Component{
     }
     
 }
-
 
 class PolygonComponent extends P5Component{
     constructor({name,
@@ -441,7 +436,6 @@ class PolygonComponent extends P5Component{
             return collidePointPoly(mx, my, this.vectors);
         }
 }
-
 
 class RectComponent extends P5Component{
     constructor({name,
@@ -578,7 +572,6 @@ class NewKeyboardResponse extends P5Component{
         
         }
 }
-
 
 class MouseResponse extends P5Component{
     constructor({name,

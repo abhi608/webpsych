@@ -68,7 +68,7 @@ function setupExp() {
             'participant': Math.random().toString(36).substring(7)
         }
     });
-    // exp.addRoutine(exp_info_box);  ---------------------
+    exp.addRoutine(exp_info_box);
     // Experiment info ends here
 
 
@@ -89,7 +89,7 @@ function setupExp() {
     }));
     instructions_loop.addRoutine(instr);
     //instr routine ends here
-    // exp.addRoutine(instructions_loop);  --------------
+    exp.addRoutine(instructions_loop);
     // Instructions loop ends here
 
 
@@ -180,7 +180,6 @@ function setupExp() {
             return trainingLoop.currentTrial['stimuli'];
         },
         textFont: sloanFont,
-        // timestart: 1000,
         timestop: 2000
     });
     stimuliTextTrainingRoutine.addComponent(trainingTextComponent);
@@ -217,22 +216,15 @@ function setupExp() {
                 tsb.n_counter = 0;
                 isCorrect = false;
                 console.log("incorrect!");
-                return soundNegativeFeedback;
+                return null;
             }
         },
-        backgroundColor: function () {
-            if(isCorrect) {
-                return 'rgb(0,255,0)';
-            } else {
-                return 'rgb(255,0,0)';
-            }
-        },
-        timestop: 200
+        timestop: 50
     });
     feedbackTrainingRoutine.addComponent(feedbackSound);
     trainingLoop.addRoutine(feedbackTrainingRoutine);
     // feedbackTrainingRoutine ends here
-    // exp.addRoutine(trainingLoop); -----------------------
+    exp.addRoutine(trainingLoop);
     // Training Session Loop ends here
 
 
@@ -254,7 +246,7 @@ function setupExp() {
     }));
     intersessionInstructionsLoop.addRoutine(intersessionInstructionsRoutine);
     // intersessionInstructionsRoutine ends here
-    // exp.addRoutine(intersessionInstructionsLoop); ----------------
+    exp.addRoutine(intersessionInstructionsLoop);
     // intersessionInstructionsLoop ends here
 
 
