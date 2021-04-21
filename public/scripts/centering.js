@@ -261,7 +261,7 @@ function setupExp() {
     var q = new Quest(tGuess, tGuessSd, pThreshold, beta, delta, gamma);
     console.log("q: ", q);
     q.normalizePdf = true;
-    let trialsDesired = 4;
+    let trialsDesired = 10;
     let sizeInPixels = getSizeInPx(q.quantile());
     let curSymbol = getNewSymbol();
     let initialCond = [{"": "0", "corr": curSymbol.keyCode, "stimuli": curSymbol.symbol, "sizeInPix": sizeInPixels}];
