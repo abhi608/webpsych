@@ -54,7 +54,8 @@ function setupExp() {
     createCanvas(windowWidth, windowHeight);
 
     // Instantiate experiment object and keep on adding new routines to it
-    var url = 'http://localhost:3000/api/addExperiment';
+    var url = 'https://webpsychv1.herokuapp.com/api/addExperiment';
+    // var url = 'http://localhost:3000/api/addExperiment';
     version = 1;
     exp = new Experiment(url, 'centeringf' + '_' + version);
 
