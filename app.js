@@ -55,7 +55,7 @@ app.get('/api/experimentdata', function (req, res, next) {
 
 // Get Results of an experiment
 app.get('/api/result/:experimentid', function (req, res, next) {
-  var experientid = req.params.experientid;
+  var experimentid = req.params.experimentid;
   var MongoClient = require('mongodb').MongoClient;
   var url = "mongodb://localhost:27017/";
   var value;
@@ -63,11 +63,11 @@ app.get('/api/result/:experimentid', function (req, res, next) {
     if (err) throw err;
     var dbo = db.db("criticalspacing");
     var query = {
-      experientid: experientid
+      experimentid: experimentid
     };
-    dbo.collection("experiment").find(query).toArray(function (err, result) {
+    dbo.collection("experiment").find().toArray(function (err, result) {
       if (err) throw err;
-
+      console.log(result);
       db.close();
       return res.send(value);
 
@@ -75,6 +75,58 @@ app.get('/api/result/:experimentid', function (req, res, next) {
   });
 
 });
+
+app.get('/api/getAllExperiments', function(req, res, next) {
+  var MongoClient = require('mongodb').MongoClient;
+  var dbUrl = "mongodb://localhost:27017/";
+  MongoClient.connect(dbUrl, function (err, db) {
+    if(err) {
+      console.log("Error during establishing DB connection");
+      console.log(err);
+      return;
+    }
+    var dbo = db.db("criticalspacing");
+    dbo.collection("questExperiment1").find().toArray(function(err, result) {
+      if(err) {
+        console.log("Error during getting documents");
+        console.log(err);
+        return;
+      }
+      db.close();
+      console.log("RESULT: ", result);
+      return res.send(result);
+    });
+  });
+});
+
+
+app.post('/api/addExperiment', function(req, res, next) {
+  var MongoClient = require('mongodb').MongoClient;
+  var dbUrl = "mongodb://localhost:27017/";
+  var experiment = req.body;
+  var experimentId = experiment['exprerimentId'];
+  console.log("Trying to establish DB connection for experimentId: ", experimentId);
+  MongoClient.connect(dbUrl, function (err, db) {
+    if(err) {
+      console.log("Error during establishing DB connection for experimentId: ", experimentId);
+      console.log(err);
+      return;
+    }
+    console.log("Successfully established DB connection for experimentId: ", experimentId);
+    var dbo = db.db("criticalspacing");
+    dbo.collection("questExperiment1").insertOne(experiment, function(err, res) {
+      if(err) {
+        console.log("Error during inserting experimentId: ", experimentId);
+        console.log(err);
+        return;
+      }
+      console.log("Successfully inserted experimentId: ", experimentId);
+      console.log("Closing DB connection for experimentId: ", experimentId);
+      db.close();
+      console.log("Successfully closed DB connection for experimentId: ", experimentId);
+    });
+  });
+})
 
 // Post final results of an experiment
 app.post('/api/result/:experimentid', function (req, res, next) {
@@ -93,12 +145,17 @@ app.post('/api/result/:experimentid', function (req, res, next) {
     };
     var newvalues = {
       $set: {
-        experimentdata: experimentdata
+        experimentdata: experimentdata,
+        experimentid: experimentid
       }
     };
-    dbo.collection("experiment").updateOne(query, newvalues, function (err, res) {
+    var newData = {
+      experimentdata: experimentdata,
+      experimentid: experimentid
+    };
+    dbo.collection("experiment").insertOne(newData, function (err, res) {
       if (err) throw err;
-      console.log("1 document updated");
+      console.log("1 document inserted");
       db.close();
     });
   });

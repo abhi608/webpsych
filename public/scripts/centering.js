@@ -54,7 +54,7 @@ function setupExp() {
     createCanvas(windowWidth, windowHeight);
 
     // Instantiate experiment object and keep on adding new routines to it
-    var url = 'http://localhost:5000/saveData';
+    var url = 'http://localhost:3000/api/addExperiment';
     version = 1;
     exp = new Experiment(url, 'centeringf' + '_' + version);
 
@@ -224,7 +224,7 @@ function setupExp() {
     feedbackTrainingRoutine.addComponent(feedbackSound);
     trainingLoop.addRoutine(feedbackTrainingRoutine);
     // feedbackTrainingRoutine ends here
-    exp.addRoutine(trainingLoop);
+    // exp.addRoutine(trainingLoop);
     // Training Session Loop ends here
 
 
@@ -261,7 +261,7 @@ function setupExp() {
     var q = new Quest(tGuess, tGuessSd, pThreshold, beta, delta, gamma);
     console.log("q: ", q);
     q.normalizePdf = true;
-    let trialsDesired = 10;
+    let trialsDesired = 1;
     let sizeInPixels = getSizeInPx(q.quantile());
     let curSymbol = getNewSymbol();
     let initialCond = [{"": "0", "corr": curSymbol.keyCode, "stimuli": curSymbol.symbol, "sizeInPix": sizeInPixels}];
@@ -369,7 +369,7 @@ function setupExp() {
         text: 'Press the alphabet/number key on keyboard corresponding to the alphabet/number that you saw'
     });
     var responseKeyboardComponent = new NewKeyboardResponse({
-        name: 'response_sensible',
+        name: 'main_trail',
         keys: alphabetsAndNumbers,
         trialsLoop: trialsLoop,
         q: q,

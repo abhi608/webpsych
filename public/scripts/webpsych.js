@@ -19,6 +19,7 @@ class Experiment{
         this.currentTrial = {};
         this.expInfo = {};
         this.expname = expname;
+        this.expId = uuidv4();
     }
     
     addRoutine(routine){
@@ -35,7 +36,7 @@ class Experiment{
     nextRoutine(){
         if (this.routineCounter +1 == this.routines.length) {
             noLoop();
-            this.computeQStats();
+            // this.computeQStats();
             this.sendData();
         } else{
             this.routineCounter += 1;
@@ -64,8 +65,9 @@ class Experiment{
     }
 
     addData(data){
+        console.log("DEBUG: ", data);
         var row = Object.assign({}, this.currentTrial);
-        for (var attr in this.expInfo) {row[attr] = this.expInfo[attr]; }
+        // for (var attr in this.expInfo) {row[attr] = this.expInfo[attr]; }
         for (var attr in data) {row[attr] = data[attr]; }
         this.data.push(row);
         console.log(this.data);
@@ -74,15 +76,28 @@ class Experiment{
 
     sendData(){
         var date = [year(), month(), day(), hour(), minute(), second()].join('-');
+        let mean = this.q.mean();
+        let sd = this.q.sd();
+        console.log("STATS: \nmean: ", mean, "\nstandard deviation: ", sd);
         if (this.server_url != null) {
-            var curObj = {'title' : 'data', 'body' : this.data, 'date' : date, 'expname' : this.expname};
-            console.log("EXPERIMENT: ", curObj);
-            httpPost(this.server_url, 'text', JSON.stringify(curObj), function(result) {
+            var objToPost = {
+                'exprerimentId': this.expId,
+                'user': this.expInfo,
+                'trailData': this.data,
+                'experimentDate': date,
+                'experimentName': this.expname,
+                'experimentResults':  {'mean': mean, 'sd': sd}
+            }
+
+            // var curObj = {'title' : 'data', 'body' : this.data, 'date' : date, 'expname' : this.expname, expId: this.expId};
+            console.log("Posting to backed server: ", objToPost);
+            httpPost(this.server_url, 'json', objToPost, function(result) {
                 noLoop();
                 background(255);
                 fill(0);
                 text('', width/3, height/3);
                 text(result, width/2, height/1.5);
+                console.log("Post result: ", result);
             });
         }
     }
@@ -474,12 +489,14 @@ class KeyboardResponse extends P5Component{
         keys = [ENTER],
         timestart = 0,
         timestop = null,
-        force_end_of_routine = true} = {}){
+        force_end_of_routine = true,
+        addToExperimentData = false} = {}){
 
             super({name, timestart, timestop});
             this.keys = keys;
             this.lock = true;
             this.response = null;
+            this.addToExperimentData = addToExperimentData;
             this.force_end_of_routine = force_end_of_routine;
         }
     
@@ -493,7 +510,9 @@ class KeyboardResponse extends P5Component{
             if (keyIsPressed & this.keys.indexOf(keyCode) > -1 & !this.lock){
                 this.lock = true;
                 this.response = keyCode;
-                this.experiment.addData({name: this.name, 'rt': millis() - this.t_start, 'resp' : this.response});
+                if(this.addToExperimentData) {
+                    this.experiment.addData({name: this.name, 'rt': millis() - this.t_start, 'resp' : this.response});
+                }
                 if (this.force_end_of_routine){
                     return false;
                 } else{
@@ -557,9 +576,9 @@ class NewKeyboardResponse extends P5Component{
                     }
                 }
                 this.experiment.setQ(this.q);
-                this.experiment.addData({name: this.name, 'rt': millis() - this.t_start, 
-                                        'resp' : convertKeyCodeToKeyCharacter(this.response),
-                                        'actual': this.trialsLoop.currentTrial['stimuli']});
+                this.experiment.addData({'trialName': this.name, 'rt': millis() - this.t_start, 
+                                        'resp' : convertKeyCodeToKeyCharacter(this.response).toUpperCase()
+                                        });
                 if (this.force_end_of_routine){
                     return false;
                 } else{
