@@ -1,3 +1,4 @@
+require('dotenv').config();
 var express = require('express');
 const path = require('path');
 const {
@@ -78,7 +79,7 @@ app.get('/api/result/:experimentid', function (req, res, next) {
 
 app.get('/api/getAllExperiments', function(req, res, next) {
   var MongoClient = require('mongodb').MongoClient;
-  var dbUrl = "mongodb://localhost:27017/";
+  var dbUrl = process.env.MONGODB_URI || "mongodb://localhost:27017/";
   MongoClient.connect(dbUrl, function (err, db) {
     if(err) {
       console.log("Error during establishing DB connection");
@@ -102,7 +103,7 @@ app.get('/api/getAllExperiments', function(req, res, next) {
 
 app.post('/api/addExperiment', function(req, res, next) {
   var MongoClient = require('mongodb').MongoClient;
-  var dbUrl = "mongodb://localhost:27017/";
+  var dbUrl = process.env.MONGODB_URI || "mongodb://localhost:27017/";
   var experiment = req.body;
   var experimentId = experiment['exprerimentId'];
   console.log("Trying to establish DB connection for experimentId: ", experimentId);
@@ -180,6 +181,7 @@ app.use(function (req, res) {
 });
 
 if (!module.parent) {
-  app.listen(3000);
+  const port = process.env.PORT || 3000;
+  app.listen(port);
   console.log('Express started on port 3000');
 }

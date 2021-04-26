@@ -22,6 +22,7 @@
   "homepage": "https://github.com/abhi608/webpsych#readme",
   "dependencies": {
     "chartjs": "^0.3.24",
+    "dotenv": "^8.2.0",
     "everpolate": "^0.0.3",
     "express": "4.17.1",
     "mathjs": "9.1.0",
