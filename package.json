@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Psychology experiment toolkit",
   "main": "app.js",
+  "engines": {
+    "node": "10.19.0",
+    "npm": "7.8.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
